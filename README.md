@@ -21,8 +21,8 @@ A Python [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server 
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/weather-mcp-server.git
-cd weather-mcp-server
+git clone https://github.com/chewyjuice/myfirstMCPserver.git
+cd myfirstmcpserver
 ```
 
 ### 2. Install dependencies
@@ -33,31 +33,34 @@ pip install -r requirements.txt
 
 ### 3. Set your API key
 
-```bash
-cp .env.example .env
-# Edit .env and add your OpenWeatherMap API key
+Copy `.env.example` to `.env` and fill in your OpenWeatherMap API key:
+
 ```
-
-### 4. Run the server
-
-```bash
-OPENWEATHER_API_KEY=your_key_here python -m src.server
+OPENWEATHER_API_KEY=your_api_key_here
 ```
 
 ## Connect to Claude Desktop
 
-Add this block to your `claude_desktop_config.json`:
+Open the config file:
 
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`  
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 
+### Windows
+
+First, find your exact Python path:
+```powershell
+(Get-Command python).Source
+# e.g. C:\Python313\python.exe
+```
+
+Then add this to your config (replace paths accordingly):
 ```json
 {
   "mcpServers": {
     "weather": {
-      "command": "python",
-      "args": ["-m", "src.server"],
-      "cwd": "/absolute/path/to/weather-mcp-server",
+      "command": "C:\\Python313\\python.exe",
+      "args": ["C:\\Users\\YOUR_USERNAME\\Code\\myfirstmcpserver\\src\\server.py"],
       "env": {
         "OPENWEATHER_API_KEY": "your_api_key_here"
       }
@@ -66,12 +69,46 @@ Add this block to your `claude_desktop_config.json`:
 }
 ```
 
-Restart Claude Desktop — you should now see the weather tools available.
+### macOS / Linux
+
+```json
+{
+  "mcpServers": {
+    "weather": {
+      "command": "python3",
+      "args": ["/absolute/path/to/weather-mcp-server/src/server.py"],
+      "env": {
+        "OPENWEATHER_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+Fully quit Claude Desktop from the system tray and reopen it. The weather tools will now be available.
+
+### Verify it's working
+
+Check the logs to confirm a successful connection:
+
+```powershell
+# Windows
+Get-Content "$env:APPDATA\Claude\logs\mcp-server-weather.log" -Tail 20
+```
+
+You should see `Server started and connected successfully` with no disconnect errors after it.
+
+### Troubleshooting
+
+- **`ENOENT` error** — the Python path in your config is wrong. Use the full absolute path from `(Get-Command python).Source`
+- **`No module named 'src'`** — you're using `-m src.server` in args; switch to the full file path instead
+- **Server disconnects immediately** — you have multiple Python versions installed and `mcp` is only on one of them. Use the full path to the correct Python executable
+- **No hammer icon** — this is normal in some Claude Desktop versions. Just ask Claude a weather question directly and it will use the tools automatically
 
 ## Example Usage in Claude
 
-> "What's the weather like in Tokyo right now?"  
-> "Give me a 3-day forecast for London in Fahrenheit."  
+> "What's the weather like in Tokyo right now?"
+> "Give me a 3-day forecast for London in Fahrenheit."
 > "What are the coordinates for Sydney, Australia?"
 
 ## Project Structure
@@ -79,6 +116,7 @@ Restart Claude Desktop — you should now see the weather tools available.
 ```
 weather-mcp-server/
 ├── src/
+│   ├── __init__.py
 │   └── server.py        # MCP server + all tool handlers
 ├── .env.example         # Template for your API key
 ├── .gitignore

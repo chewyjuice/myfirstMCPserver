@@ -153,8 +153,7 @@ async def _get_current_weather(
         "appid": API_KEY,
         "units": args.get("units", "metric"),
     }
-    resp = client.get(f"{BASE_URL}/weather", params=params)
-    resp = await resp
+    resp = await client.get(f"{BASE_URL}/weather", params=params)
     resp.raise_for_status()
     data = resp.json()
 
